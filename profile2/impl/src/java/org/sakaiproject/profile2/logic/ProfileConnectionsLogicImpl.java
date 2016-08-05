@@ -508,18 +508,12 @@ public class ProfileConnectionsLogicImpl implements ProfileConnectionsLogic {
 	 */
 	private List<String> getConfirmedConnectionUserIdsForUser(final String userUuid) {
 
-		List<String> userUuids = null;
+		List<String> userUuids = new ArrayList<String>();
 		
 		if(cache.containsKey(userUuid)){
 			log.debug("Fetching connections from cache for: " + userUuid);
 			userUuids = (List<String>)cache.get(userUuid);
-			if(userUuids == null) {
-				// This means that the cache has expired. evict the key from the cache
-				log.debug("Connections cache appears to have expired for " + userUuid);
-				evictFromCache(userUuid);
-			}
-		}
-		if(userUuids == null) {
+		} else {
 			userUuids = dao.getConfirmedConnectionUserIdsForUser(userUuid);
 			if(userUuids != null){
 				log.debug("Adding connections to cache for: " + userUuid);
@@ -589,7 +583,7 @@ public class ProfileConnectionsLogicImpl implements ProfileConnectionsLogic {
 	 */
 	private void evictFromCache(String cacheKey) {
 		cache.remove(cacheKey);
-		log.debug("Evicted data in cache for key: " + cacheKey);
+		log.info("Evicted data in cache for key: " + cacheKey);
 	}
 
 	
