@@ -17,10 +17,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Bytes;
 import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.exception.GbImportCommentMissingItemException;
+import org.sakaiproject.gradebookng.business.exception.GbImportExportDuplicateColumnException;
 import org.sakaiproject.gradebookng.business.exception.GbImportExportInvalidColumnException;
 import org.sakaiproject.gradebookng.business.exception.GbImportExportInvalidFileTypeException;
+import org.sakaiproject.gradebookng.business.exception.GbImportExportUnknownStudentException;
 import org.sakaiproject.gradebookng.business.model.GbStudentGradeInfo;
-import org.sakaiproject.gradebookng.business.model.ImportedGradeWrapper;
+import org.sakaiproject.gradebookng.business.model.ImportedSpreadsheetWrapper;
 import org.sakaiproject.gradebookng.business.model.ProcessedGradeItem;
 import org.sakaiproject.gradebookng.business.util.ImportGradesHelper;
 import org.sakaiproject.gradebookng.tool.model.ImportWizardModel;
@@ -97,22 +99,28 @@ public class GradeImportUploadStep extends Panel {
 				final Map<String, String> userMap = getUserMap();
 
 				// turn file into list
-				ImportedGradeWrapper importedGradeWrapper = null;
+				// TODO would be nice to capture the values from these exceptions
+				ImportedSpreadsheetWrapper spreadsheetWrapper = null;
 				try {
-					importedGradeWrapper = ImportGradesHelper.parseImportedGradeFile(upload.getInputStream(), upload.getContentType(), userMap);
+					spreadsheetWrapper = ImportGradesHelper.parseImportedGradeFile(upload.getInputStream(), upload.getContentType(), userMap);
 				} catch (final GbImportExportInvalidColumnException e) {
 					error(getString("importExport.error.incorrectformat"));
 					return;
 				} catch (final GbImportExportInvalidFileTypeException | InvalidFormatException e) {
 					error(getString("importExport.error.incorrecttype"));
 					return;
+				} catch (final GbImportExportUnknownStudentException e) {
+					error(getString("importExport.error.unknownstudent"));
+					return;
+				} catch (final GbImportExportDuplicateColumnException e) {
+					error(getString("importExport.error.duplicatecolumn"));
+					return;
 				} catch (final IOException e) {
 					error(getString("importExport.error.unknown"));
 					return;
 				}
 
-				//if still null
-				if(importedGradeWrapper == null) {
+				if(spreadsheetWrapper == null) {
 					error(getString("importExport.error.unknown"));
 					return;
 				}
@@ -124,7 +132,7 @@ public class GradeImportUploadStep extends Panel {
 				// process file
 				List<ProcessedGradeItem> processedGradeItems = null;
 				try {
-					processedGradeItems = ImportGradesHelper.processImportedGrades(importedGradeWrapper,assignments, grades);
+					processedGradeItems = ImportGradesHelper.processImportedGrades(spreadsheetWrapper, assignments, grades);
 				} catch (final GbImportCommentMissingItemException e) {
 					// TODO would be good if we could show the column here, but would have to return it
 					error(getString("importExport.error.commentnoitem"));
