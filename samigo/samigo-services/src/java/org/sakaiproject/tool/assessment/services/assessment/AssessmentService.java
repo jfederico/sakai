@@ -267,13 +267,15 @@ public class AssessmentService {
 			AssessmentTemplateFacade assessmentTemplate = null;
 			// #1 - check templateId and prepared it in Long
 			Long templateIdLong = AssessmentTemplateFacade.DEFAULTTEMPLATE;
-			if (templateId != null && !templateId.equals(""))
+			if (StringUtils.isNotBlank(templateId)) {
 				templateIdLong = new Long(templateId);
+			}
 
 			// #2 - check typeId and prepared it in Long
 			Long typeIdLong = TypeFacade.HOMEWORK;
-			if (typeId != null && !typeId.equals(""))
+			if (StringUtils.isNotBlank(typeId)) {
 				typeIdLong = new Long(typeId);
+			}
 
 			AssessmentFacadeQueriesAPI queries = PersistenceService
 					.getInstance().getAssessmentFacadeQueries();
@@ -395,13 +397,8 @@ public class AssessmentService {
 	}
 
 	public boolean verifyItemsDrawSize(SectionFacade section){
-		if ((section != null)
-				&& (section
-						.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE) != null)
-						&& (section
-								.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE)
-								.equals(SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL
-										.toString()))) {
+		if (section != null && section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE) != null
+				&& StringUtils.equals(section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE), SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString())) {
 			QuestionPoolService qpService = new QuestionPoolService();
 			ArrayList itemlist = qpService
 			.getAllItems(Long.valueOf(section
@@ -430,10 +427,8 @@ public class AssessmentService {
 	}
 	
 	public int updateRandomPoolQuestions(SectionFacade section, boolean publishing){
-		if ((section != null)
-				&& (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE) != null)
-				&& (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE).
-				equals(SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString()))) {
+		if (section != null && section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE) != null
+				&& StringUtils.equals(section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE), SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString())) {
 
 			QuestionPoolService qpService = new QuestionPoolService();
 			ArrayList itemlist = qpService.getAllItems(Long.valueOf(section
@@ -466,7 +461,7 @@ public class AssessmentService {
 				String requestedScore = (section.getSectionMetaDataByLabel(SectionDataIfc.POINT_VALUE_FOR_QUESTION) != null) ? 
 						                 section.getSectionMetaDataByLabel(SectionDataIfc.POINT_VALUE_FOR_QUESTION)	: "";
 						                 
-				if (requestedScore != null && !requestedScore.equals("")) {
+				if (StringUtils.isNotBlank(requestedScore)) {
 					hasRandomPartScore = true;
 					score = new Double(requestedScore);
 				}
@@ -475,7 +470,7 @@ public class AssessmentService {
 				String requestedDiscount = (section.getSectionMetaDataByLabel(SectionDataIfc.DISCOUNT_VALUE_FOR_QUESTION) != null) ? 
 											section.getSectionMetaDataByLabel(SectionDataIfc.DISCOUNT_VALUE_FOR_QUESTION) : "";
 
-				if (requestedDiscount != null && !requestedDiscount.equals("")) {
+				if (StringUtils.isNotBlank(requestedDiscount)) {
 					hasRandomPartDiscount = true;
 					discount = new Double(requestedDiscount);
 				}
@@ -589,13 +584,15 @@ public class AssessmentService {
 			AssessmentTemplateFacade assessmentTemplate = null;
 			// #1 - check templateId and prepared it in Long
 			Long templateIdLong = AssessmentTemplateFacade.DEFAULTTEMPLATE;
-			if (templateId != null && !templateId.equals(""))
+			if (StringUtils.isNotBlank(templateId)) {
 				templateIdLong = new Long(templateId);
+			}
 
 			// #2 - check typeId and prepared it in Long
 			Long typeIdLong = TypeFacade.HOMEWORK;
-			if (typeId != null && !typeId.equals(""))
+			if (StringUtils.isNotBlank(typeId)) {
 				typeIdLong = new Long(typeId);
+			}
 
 			AssessmentFacadeQueriesAPI queries = PersistenceService
 					.getInstance().getAssessmentFacadeQueries();
@@ -849,7 +846,7 @@ public class AssessmentService {
 			// create a copy of the resource
 			ContentResource cr = AssessmentService.getContentHostingService().getResource(resourceId);
 			String escapedName = escapeResourceName(filename);
-			if (toContext != null && !toContext.equals("")) {
+			if (StringUtils.isNotBlank(toContext)) {
 				cr_copy = AssessmentService.getContentHostingService().addAttachmentResource(escapedName, 
 						toContext, 
 						ToolManager.getTool("sakai.samigo").getTitle(), cr
@@ -1138,7 +1135,7 @@ public class AssessmentService {
 			boolean hasRandomPartDiscount = false;
 			Double discount = null;
 			
-			if (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE).equals(SectionDataIfc.QUESTIONS_AUTHORED_ONE_BY_ONE.toString()))
+			if (StringUtils.equals(section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE), SectionDataIfc.QUESTIONS_AUTHORED_ONE_BY_ONE.toString()))
   			{
 				items = section.getItemArray();
   			}
@@ -1279,28 +1276,33 @@ public class AssessmentService {
 		for (Object sectionObj : assessment.getSectionArray()) {
 			SectionFacade section = (SectionFacade)sectionObj;
 			List<ItemDataIfc> items = null;
-						
-			if (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE).equals(SectionDataIfc.QUESTIONS_AUTHORED_ONE_BY_ONE.toString()))
-  			{
-				items = section.getItemArray();
-  			}
-			else 
-			{
-				QuestionPoolService qpService = new QuestionPoolService();
-				try {
-					Long qpId = Long.valueOf(section.getSectionMetaDataByLabel(SectionDataIfc.POOLID_FOR_RANDOM_DRAW));
-					items = qpService.getAllItems(qpId);
-				} catch (NumberFormatException e) {
-					log.error("NumberFormatException converting to Long: " + section.getSectionMetaDataByLabel(SectionDataIfc.POOLID_FOR_RANDOM_DRAW));
+			if (section != null) {
+				if (section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE) == null || StringUtils.equals(section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE), SectionDataIfc.QUESTIONS_AUTHORED_ONE_BY_ONE.toString()))
+				{
+					items = section.getItemArray();
+				}
+				else if (StringUtils.equals(section.getSectionMetaDataByLabel(SectionDataIfc.AUTHOR_TYPE), SectionDataIfc.RANDOM_DRAW_FROM_QUESTIONPOOL.toString()))
+				{
+					QuestionPoolService qpService = new QuestionPoolService();
+					try {
+						Long qpId = Long.valueOf(section.getSectionMetaDataByLabel(SectionDataIfc.POOLID_FOR_RANDOM_DRAW));
+						items = qpService.getAllItems(qpId);
+					} catch (NumberFormatException e) {
+						log.error("NumberFormatException converting to Long: " + section.getSectionMetaDataByLabel(SectionDataIfc.POOLID_FOR_RANDOM_DRAW));
+					}
 				}
 			}
-  				
-			for (ItemDataIfc item : items) 
-			{
-				// only exports these questions types
-				if (isQuestionTypeExportable2MarkupText(item.getTypeId())) {
-					exportToMarkupText = true;
-					break;
+			if (items == null) {
+				log.info("Items for assessment {} section {} is null in isExportable", assessment.getAssessmentId(), section.getSectionId());
+			}
+			else {
+				for (ItemDataIfc item : items) 
+				{
+					// only exports these questions types
+					if (isQuestionTypeExportable2MarkupText(item.getTypeId())) {
+						exportToMarkupText = true;
+						break;
+					}
 				}
 			}
 			if (exportToMarkupText) {
@@ -1332,6 +1334,11 @@ public class AssessmentService {
 
 	public static String copyStringAttachment(String stringWithAttachment) {
 		AssessmentService assessmentService = new AssessmentService();
-		return assessmentService.copyContentHostingAttachments(stringWithAttachment, AgentFacade.getCurrentSiteId());
+		
+		if(AgentFacade.getCurrentSiteId()!=null){
+			return assessmentService.copyContentHostingAttachments(stringWithAttachment, AgentFacade.getCurrentSiteId());
+		}
+		
+		return stringWithAttachment;
 	}
 }

@@ -775,16 +775,16 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 				UIOutput.make(tofill, "export-cc").decorate(new UIFreeAttributeDecorator("title", messageLocator.getMessage("simplepage.export_cc.tooltip")));
 
 				// Check to see if we have tools registered for external import
-				List<Map<String, Object>> toolsFileItem = simplePageBean.getToolsFileItem();
-				if ( toolsFileItem.size() > 0 ) {
+				List<Map<String, Object>> toolsImportItem = simplePageBean.getToolsImportItem();
+				if ( toolsImportItem.size() > 0 ) {
 					UIOutput.make(tofill, "show-lti-import");
 					UIForm ltiImport =  UIForm.make(tofill, "lti-import-form");
 					makeCsrf(ltiImport, "csrf1");
 					GeneralViewParameters ltiParams = new GeneralViewParameters();
 					ltiParams.setSendingPage(currentPage.getPageId());
-					ltiParams.viewID = LtiFileItemProducer.VIEW_ID;
+					ltiParams.viewID = LtiImportItemProducer.VIEW_ID;
 					UILink link = UIInternalLink.make(tofill, "lti-import-link", messageLocator.getMessage("simplepage.import_lti_button"), ltiParams);
-					link.decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.fileitem.tooltip")));
+					link.decorate(new UITooltipDecorator(messageLocator.getMessage("simplepage.importitem.tooltip")));
 				}
 			}
 			
@@ -1344,13 +1344,13 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					    UIOutput itemicon = UIOutput.make(linkdiv,"item-icon");
 					    switch (i.getType()) {
 					    case SimplePageItem.FORUM:
-						itemicon.decorate(new UIStyleDecorator("icon-sakai-forums"));
+						itemicon.decorate(new UIStyleDecorator("icon-sakai--sakai-forums"));
 						break;
 					    case SimplePageItem.ASSIGNMENT:
-						itemicon.decorate(new UIStyleDecorator("icon-sakai-assignment-grades"));
+						itemicon.decorate(new UIStyleDecorator("icon-sakai--sakai-assignment-grades"));
 						break;
 					    case SimplePageItem.ASSESSMENT:
-						itemicon.decorate(new UIStyleDecorator("icon-sakai-samigo"));
+						itemicon.decorate(new UIStyleDecorator("icon-sakai--sakai-samigo"));
 						break;
 					    case SimplePageItem.BLTI:
 						itemicon.decorate(new UIStyleDecorator("fa-globe"));
@@ -2804,14 +2804,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							UIOutput.make(tableRow, "announcements-groups-titles", itemGroupTitles);
 					}
 					if(canSeeAll || simplePageBean.isItemAvailable(i)) {
-						//get widget height from the item attribute
-						String height = i.getAttribute("height") != null ? i.getAttribute("height") : "" ;
 						//create html for announcements widget
-						String divHeight = "height:" + height +"px;";
 						String html = "<div align=\"left\" class=\"announcements-div\"></div>";
 						UIVerbatim.make(tableRow, "content", html);
 						UIOutput.make(tableRow, "announcements-id", String.valueOf(i.getId()));
-						UIOutput.make(tableRow, "announcements-widget-height", height);
 						//setting announcements url to get all announcements for the site
 						UIOutput.make(tableRow, "announcements-site-url", myUrl() + "/direct/announcement/site/" + simplePageBean.getCurrentSiteId());
 						//setting this variable to redirect user to the particular announcement
@@ -2844,14 +2840,10 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 							UIOutput.make(tableRow, "forum-summary-groups-titles", itemGroupTitles);
 					}
 					if(canSeeAll || simplePageBean.isItemAvailable(i)) {
-						//get widget height from the item attribute
-						String height = i.getAttribute("height") != null ? i.getAttribute("height") : "" ;
-						String divHeight = "height:" + height +"px;";
 						//create html for forum-summary widget
 						String html = "<div align=\"left\" class=\"forum-summary-div\"></div>";
 						UIVerbatim.make(tableRow, "content", html);
 						UIOutput.make(tableRow, "forum-summary-id", String.valueOf(i.getId()));
-						UIOutput.make(tableRow, "forum-summary-widget-height", height);
 						//setting forums-messages url to get all recent messages for the site
 						UIOutput.make(tableRow, "forum-summary-site-url", myUrl() + "/direct/forums/messages/" + simplePageBean.getCurrentSiteId());
 						//setting the url such that request goes to ShowItemProducer to display forum conversations inside Lessons tool
@@ -3351,15 +3343,19 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 					
 				}
 				else {
-				    if (i.getAttribute("multimediaUrl") != null) // resource where we've stored the URL ourselves
-					URL = i.getAttribute("multimediaUrl");
-				    else
+				    // run this through /access/lessonbuilder so we can track it even if the user uses the context menu
+				    // We could do this only for the notDone case, but I think it could cause trouble for power users
+				    // if the url isn't always consistent.
+				    if (i.getAttribute("multimediaUrl") != null) { // resource where we've stored the URL ourselves
+					URL = "/access/lessonbuilder/item/" + i.getId() + "/";
+				    } else {
 					URL = i.getItemURL(simplePageBean.getCurrentSiteId(),currentPage.getOwner());
+				    }
 				    UILink link = UILink.make(container, ID, URL);
 				    link.decorate(new UIFreeAttributeDecorator("target", "_blank"));
 				    if (notDone)
 					link.decorate(new UIFreeAttributeDecorator("onclick", 
-										   "setTimeout(function(){window.location.reload(true)},3000); return true"));
+										   "afterLink($(this)," + i.getId() + ") ; return true"));
 				}
 			}
 
@@ -3676,13 +3672,12 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			return;
 		}
 		UIInput.make(form, "forumSummaryEditId", "#{simplePageBean.itemId}");
-		UIInput.make(form, "forum-summary-height", "#{simplePageBean.forumSummaryHeight}");
-		UIOutput.make(form, "forum-summary-height-label", messageLocator.getMessage("simplepage.forum-summary.height_label"));
 		String[] options = {"5", "10", "15", "20", "30", "50"};
 		String[] labels = {"5", "10", "15", "20", "30", "50"};
 		UIOutput.make(form, "forumNumberDropdownLabel", messageLocator.getMessage("simplepage.forum-number-dropdown-label"));
 		UISelect.make(form, "forumNumberDropdown", options, labels, "#{simplePageBean.forumSummaryDropDown}", "5");
 		UICommand.make(form, "forum-summary-add-item", messageLocator.getMessage("simplepage.save_message"), "#{simplePageBean.addForumSummary}");
+		UIInput.make(form, "forum-summary-add-before", "#{simplePageBean.addBefore}");
 		UICommand.make(form, "forum-summary-cancel", messageLocator.getMessage("simplepage.cancel"), null);
 		UICommand.make(form, "delete-forum-summary-item", messageLocator.getMessage("simplepage.delete"), "#{simplePageBean.deleteItem}");
 	}
@@ -4094,13 +4089,12 @@ public class ShowPageProducer implements ViewComponentProducer, DefaultView, Nav
 			return;
 		}
 		UIInput.make(form, "announcementsEditId", "#{simplePageBean.itemId}");
-		UIInput.make(form, "announcements-height", "#{simplePageBean.announcementsHeight}");
-		UIOutput.make(form, "announcements-height-label", messageLocator.getMessage("simplepage.announcements.height_label"));
 		String[] options = {"5","10","15","20","30","50"};
 		String[] labels = {"5","10","15","20","30","50"};
 		UIOutput.make(form, "announcementsNumberDropdownLabel", messageLocator.getMessage("simplepage.announcements-number-dropdown-label"));
 		UISelect.make(form, "announcementsNumberDropdown", options, labels, "#{simplePageBean.announcementsDropdown}","5");
 		UICommand.make(form, "announcements-add-item", messageLocator.getMessage("simplepage.save_message"), "#{simplePageBean.addAnnouncements}");
+		UIInput.make(form, "announcements-add-before", "#{simplePageBean.addBefore}");
 		UICommand.make(form, "announcements-cancel", messageLocator.getMessage("simplepage.cancel"), null);
 		UICommand.make(form, "delete-announcements-item", messageLocator.getMessage("simplepage.delete"), "#{simplePageBean.deleteItem}");
 	}

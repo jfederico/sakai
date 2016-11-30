@@ -1201,53 +1201,34 @@ public class FormattedTextImpl implements FormattedText
 
     @Override
     public String stripHtmlFromText(String text, boolean smartSpacing) {
-        // KNL-1253 use Jsoup
-        if (text != null && !"".equals(text)) {
-            if (smartSpacing) {
-                // replace block level html with an extra space (to try to preserve the intent)
-                text = addSmartSpacing(text);
-            }
-            text = org.jsoup.Jsoup.clean(text, "", org.jsoup.safety.Whitelist.none(), new org.jsoup.nodes.Document.OutputSettings().prettyPrint(false).outline(false));
-            if (smartSpacing) {
-                text = eliminateExtraWhiteSpace(text);
-            }
-        }
-        return text;
+        return stripHtmlFromText(text, smartSpacing, false);
     }
 
     @Override
     public String stripHtmlFromText(String text, boolean smartSpacing, boolean stripEscapeSequences)
     {
-        // KNL-1267	--bbailla2
-        if (!stripEscapeSequences)
-        {
-            return stripHtmlFromText(text, smartSpacing);
+        if (StringUtils.isBlank(text)) return text;
+
+        if (smartSpacing) {
+            text = text.replaceAll("/br>", "/br> ").replaceAll("/p>", "/p> ").replaceAll("/tr>", "/tr> ");
         }
 
-        if (smartSpacing)
-        {
-            text = addSmartSpacing(text);
+        if (stripEscapeSequences) {
+            org.jsoup.nodes.Document document = org.jsoup.Jsoup.parse(text);
+            org.jsoup.nodes.Element body = document.body();
+            //remove any html tags, unescape any escape characters
+            text = body.text();
+            //&nbsp; are converted to char code 160, java doesn't treat it like whitespace, so replace it with ' '
+            text = text.replace((char)160, ' ');
+        } else {
+            text = org.jsoup.Jsoup.clean(text, "", org.jsoup.safety.Whitelist.none(), new org.jsoup.nodes.Document.OutputSettings().prettyPrint(false).outline(false));
         }
 
-        org.jsoup.nodes.Document document = org.jsoup.Jsoup.parse(text);
-        org.jsoup.nodes.Element body = document.body();
-        //remove any html tags, unescape any escape characters
-        String strippedText = body.text();
-        //&nbsp; are converted to char code 160, java doesn't treat it like whitespace, so replace it with ' '
-        //Could there be others like this?
-        strippedText = strippedText.replace((char)160, ' ');
-        strippedText = eliminateExtraWhiteSpace(strippedText);
-        return strippedText;
-    }
+        if (smartSpacing || stripEscapeSequences) {
+            text = text.replaceAll("\\s+", " ");
+        }
 
-    private String addSmartSpacing(String text)
-    {
-        return text.replaceAll("/br>", "/br> ").replaceAll("/p>", "/p> ").replaceAll("/tr>", "/tr> ");
-    }
-
-    private String eliminateExtraWhiteSpace(String text)
-    {
-        return text.replaceAll("\\s+", " ").trim();
+        return text.trim();
     }
 
     public NumberFormat getNumberFormat(Integer maxFractionDigits, Integer minFractionDigits, Boolean groupingUsed) {
@@ -1275,7 +1256,7 @@ public class FormattedTextImpl implements FormattedText
     /**
      * SAK-23567 Gets the shortened version of the title
      *
-     * Controlled by "site.title.cut.method", "site.title.maxlength", and "site.title.cut.separator"
+     * Controlled by "site.title.cut.method", "site.title.cut.maxlength", and "site.title.cut.separator"
      *
      * @param text the full site title (or desc) to shorten
      * @param maxLength maximum length for the string before it is shortened (and after shortening) (null defaults to 25)
@@ -1286,7 +1267,8 @@ public class FormattedTextImpl implements FormattedText
     public String makeShortenedText(String text, Integer maxLength, String separator, String cutMethod) {
         // this method defines the defaults for the 3 configuration options
         if (maxLength == null || maxLength < 1) {
-            maxLength = serverConfigurationService.getInt("site.title.maxlength", 25);
+        	// SAK-31985: New property needed to control the site title
+            maxLength = serverConfigurationService.getInt("site.title.cut.maxlength", serverConfigurationService.getInt("site.title.maxlength", 25));
         }
         if (separator == null) {
             separator = serverConfigurationService.getString("site.title.cut.separator", " ...");

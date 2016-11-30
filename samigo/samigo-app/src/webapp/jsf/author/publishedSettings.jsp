@@ -43,7 +43,6 @@
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
       <head><%= request.getAttribute("html.head") %>
       <title><h:outputText value="#{assessmentSettingsMessages.sakai_assessment_manager} #{assessmentSettingsMessages.dash} #{assessmentSettingsMessages.settings}" /></title>
-      <script type="text/javascript" src="../../js/extendedTime.js"/>
       <samigo:script path="/jsf/widget/hideDivision/hideDivision.js"/>
       <samigo:script path="/jsf/widget/colorpicker/colorpicker.js"/>
       <script type="text/javascript" src="/library/js/lang-datepicker/lang-datepicker.js"></script>
@@ -282,9 +281,6 @@
     </h:selectManyCheckbox>
   </div>
   
-  <!-- Extended Time -->
-  <%@ include file="inc/publishedExtendedTime.jspf"%>
-
     <!-- NUMBER OF SUBMISSIONS -->
   <h:panelGroup styleClass="row" layout="block" rendered="#{publishedSettings.valueMap.submissionModel_isInstructorEditable==true}">
     <h:outputLabel styleClass="col-md-2" value="#{assessmentSettingsMessages.submissions_allowed}" />
@@ -363,6 +359,10 @@
       </div>
     </div>
   </h:panelGroup>
+
+  <!-- Extended Time -->
+  <%@ include file="inc/publishedExtendedTime.jspf"%>
+
   
   <!-- AUTOMATIC SUBMISSION -->
   <h:panelGroup styleClass="form-group row" layout="block" rendered="#{publishedSettings.valueMap.automaticSubmission_isInstructorEditable==true}">

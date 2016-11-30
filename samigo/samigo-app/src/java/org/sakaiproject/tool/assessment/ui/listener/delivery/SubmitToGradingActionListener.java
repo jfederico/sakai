@@ -143,7 +143,7 @@ public class SubmitToGradingActionListener implements ActionListener {
 			// set AssessmentGrading in delivery
 			delivery.setAssessmentGrading(adata);
             if (adata.getForGrade()) {
-                Event event = eventTrackingService.newEvent("", adata.getPublishedAssessmentTitle(), null, true, NotificationService.NOTI_OPTIONAL, SamigoLRSStatements.getStatementForGradedAssessment(adata, publishedAssessment));
+                Event event = eventTrackingService.newEvent(SamigoConstants.EVENT_ASSESSMENT_AUTO_GRADED, adata.getPublishedAssessmentTitle(), null, true, NotificationService.NOTI_OPTIONAL, SamigoLRSStatements.getStatementForGradedAssessment(adata, publishedAssessment));
                 eventTrackingService.post(event);
             }
 			// set url & confirmation after saving the record for grade
@@ -381,7 +381,7 @@ public class SubmitToGradingActionListener implements ActionListener {
 							if (finBean.getItemGradingData() != null) {
 								Long itemGradingId = finBean.getItemGradingData().getItemGradingId();
 								if (list.contains(itemGradingId)) {
-									finBean.setIsCorrect(false);
+									finBean.setIsCorrect(Boolean.FALSE);
 								}
 							}
 						}

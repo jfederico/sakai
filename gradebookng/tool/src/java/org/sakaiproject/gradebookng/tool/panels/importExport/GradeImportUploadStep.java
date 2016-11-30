@@ -44,7 +44,7 @@ public class GradeImportUploadStep extends Panel {
 	private final String panelId;
 
 	@SpringBean(name = "org.sakaiproject.gradebookng.business.GradebookNgBusinessService")
-	protected GradebookNgBusinessService businessService;
+	private GradebookNgBusinessService businessService;
 
 	public GradeImportUploadStep(final String id) {
 		super(id);
@@ -102,7 +102,7 @@ public class GradeImportUploadStep extends Panel {
 				// TODO would be nice to capture the values from these exceptions
 				ImportedSpreadsheetWrapper spreadsheetWrapper = null;
 				try {
-					spreadsheetWrapper = ImportGradesHelper.parseImportedGradeFile(upload.getInputStream(), upload.getContentType(), userMap);
+					spreadsheetWrapper = ImportGradesHelper.parseImportedGradeFile(upload.getInputStream(), upload.getContentType(), upload.getClientFileName(), userMap);
 				} catch (final GbImportExportInvalidColumnException e) {
 					error(getString("importExport.error.incorrectformat"));
 					return;

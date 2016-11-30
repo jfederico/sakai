@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.faces.context.FacesContext;
 import javax.faces.event.AbortProcessingException;
@@ -101,7 +100,7 @@ import org.sakaiproject.tool.assessment.ui.listener.util.ContextUtil;
 import org.sakaiproject.tool.assessment.ui.model.delivery.TimedAssessmentGradingModel;
 import org.sakaiproject.tool.assessment.ui.queue.delivery.TimedAssessmentQueue;
 import org.sakaiproject.tool.assessment.ui.web.session.SessionUtil;
-import org.sakaiproject.tool.assessment.util.ExtendedTimeService;
+import org.sakaiproject.tool.assessment.util.ExtendedTimeDeliveryService;
 import org.sakaiproject.tool.assessment.util.FormatException;
 import org.sakaiproject.tool.assessment.util.SamigoLRSStatements;
 import org.sakaiproject.util.FormattedText;
@@ -460,7 +459,7 @@ public class DeliveryActionListener
             		  }
             		  
                       event = eventTrackingService.newEvent("sam.assessment.take",
-                              "siteId=" + site_id + ", " + eventRef.toString(), "samigo",true,0,SamigoLRSStatements.getStatementForTakeAssessment(delivery.getAssessmentTitle(),delivery.getPastDue(),false));
+                              "siteId=" + site_id + ", " + eventRef.toString(), "samigo",true,0,SamigoLRSStatements.getStatementForTakeAssessment(delivery.getAssessmentTitle(), delivery.getPastDue(), publishedAssessment.getReleaseTo(), false));
                       eventTrackingService.post(event);
             	  }
             	  else if (action == DeliveryBean.TAKE_ASSESSMENT_VIA_URL) {
@@ -476,7 +475,7 @@ public class DeliveryActionListener
             			  eventRef.append(timeRemaining);
             		  }
                       event = eventTrackingService.newEvent("sam.assessment.take.via_url",
-                                "siteId=" + site_id + ", " + eventRef.toString(), site_id, true, NotificationService.NOTI_REQUIRED, SamigoLRSStatements.getStatementForTakeAssessment(delivery.getAssessmentTitle(),delivery.getPastDue(),false));
+                                "siteId=" + site_id + ", " + eventRef.toString(), site_id, true, NotificationService.NOTI_REQUIRED, SamigoLRSStatements.getStatementForTakeAssessment(delivery.getAssessmentTitle(), delivery.getPastDue(), publishedAssessment.getReleaseTo(), true));
                       eventTrackingService.post(event);
             	  }
               }
@@ -1915,12 +1914,12 @@ public class DeliveryActionListener
                 pubAnswer.getIsCorrect().booleanValue())
             {
               mbean.setFeedback(pubAnswer.getCorrectAnswerFeedback());
-              mbean.setIsCorrect(true);
+              mbean.setIsCorrect(Boolean.TRUE);
             }
             else
             {
               mbean.setFeedback(pubAnswer.getInCorrectAnswerFeedback());
-              mbean.setIsCorrect(false);
+              mbean.setIsCorrect(Boolean.FALSE);
             }
           } else if (NONE_OF_THE_ABOVE.equals(data.getPublishedAnswerId())) {
         	  mbean.setResponse(data.getPublishedAnswerId().toString());
@@ -1959,7 +1958,7 @@ public class DeliveryActionListener
       List<ItemGradingData> datas = bean.getItemGradingDataArray();
       if (datas == null || datas.isEmpty())
       {
-        fbean.setIsCorrect(false);
+        fbean.setIsCorrect(Boolean.FALSE);
       }
       else
       {
@@ -1983,10 +1982,10 @@ public class DeliveryActionListener
             }
             else {
             	if (data.getIsCorrect().booleanValue()) {
-            		fbean.setIsCorrect(true);
+            		fbean.setIsCorrect(Boolean.TRUE);
             	}
             	else {
-            		fbean.setIsCorrect(false);
+            		fbean.setIsCorrect(Boolean.FALSE);
             	}
             }
           }
@@ -2109,7 +2108,7 @@ public class DeliveryActionListener
       List<ItemGradingData> datas = bean.getItemGradingDataArray();
       if (datas == null || datas.isEmpty())
       {
-        fbean.setIsCorrect(false);
+        fbean.setIsCorrect(Boolean.FALSE);
       }
       else
       {
@@ -2138,10 +2137,10 @@ public class DeliveryActionListener
             }
             else {
             	if (data.getIsCorrect().booleanValue()) {
-            		fbean.setIsCorrect(true);
+            		fbean.setIsCorrect(Boolean.TRUE);
             	}
             	else {
-            		fbean.setIsCorrect(false);
+            		fbean.setIsCorrect(Boolean.FALSE);
             	}
             }
           }
@@ -2386,7 +2385,7 @@ public class DeliveryActionListener
           List<ItemGradingData> datas = bean.getItemGradingDataArray();
           if (datas == null || datas.isEmpty())
           {
-              fbean.setIsCorrect(false);
+              fbean.setIsCorrect(Boolean.FALSE);
           } else {
               for (ItemGradingData data : datas) {
 
@@ -2457,7 +2456,16 @@ public class DeliveryActionListener
         if (data.getPublishedItemTextId().equals(text.getId()))
         {
           mbean.setItemGradingData(data);
-		  mbean.setIsCorrect(data.getIsCorrect());
+		  if (data.getIsCorrect() != null &&
+				  data.getIsCorrect().booleanValue())
+		  {
+			  mbean.setIsCorrect(true);
+		  }
+		  else
+		  {
+			  mbean.setIsCorrect(false);
+		  }
+ 
           if (data.getAnswerText() != null)
           {
             mbean.setResponse(data.getAnswerText());
@@ -2666,12 +2674,12 @@ public class DeliveryActionListener
     delivery.setBeginTime(ag.getAttemptDate());
 
 		// Handle Extended Time Information
-		ExtendedTimeService extendedTimeService = new ExtendedTimeService(publishedAssessment);
-		if (extendedTimeService.hasExtendedTime()) {
-			if (extendedTimeService.getTimeLimit() > 0)
-				publishedAssessment.setTimeLimit(extendedTimeService.getTimeLimit());
-			publishedAssessment.setDueDate(extendedTimeService.getDueDate());
-			publishedAssessment.setRetractDate(extendedTimeService.getRetractDate());
+		ExtendedTimeDeliveryService extendedTimeDeliveryService = new ExtendedTimeDeliveryService(publishedAssessment);
+		if (extendedTimeDeliveryService.hasExtendedTime()) {
+			if (extendedTimeDeliveryService.getTimeLimit() > 0)
+				publishedAssessment.setTimeLimit(extendedTimeDeliveryService.getTimeLimit());
+			publishedAssessment.setDueDate(extendedTimeDeliveryService.getDueDate());
+			publishedAssessment.setRetractDate(extendedTimeDeliveryService.getRetractDate());
 		}
     
     String timeLimitInSetting = control.getTimeLimit() == null ? "0" : control.getTimeLimit().toString();
@@ -2713,7 +2721,7 @@ public class DeliveryActionListener
 //    			timeLimit = Integer.parseInt(delivery.getTimeLimit());
 //    		}
 //    	}
-    	timeLimit = delivery.evaluateTimeLimit(publishedAssessment,fromBeginAssessment, extendedTimeService.getTimeLimit());
+    	timeLimit = delivery.evaluateTimeLimit(publishedAssessment,fromBeginAssessment, extendedTimeDeliveryService.getTimeLimit());
     }
     else if (delivery.getTurnIntoTimedAssessment()) {
    		timeLimit = Integer.parseInt(delivery.updateTimeLimit(timeLimitInSetting));

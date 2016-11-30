@@ -39,7 +39,6 @@ GradebookGradeSummary.prototype.setupWicketModal = function() {
     this.setupTabs();
     this.setupStudentNavigation();
     this.setupFixedFooter();
-    this.hideWeightColumn();
     this.setupTableSorting();
     this.setupMask();
     this.setupModalPrint();
@@ -132,11 +131,15 @@ GradebookGradeSummary.prototype.setupStudentNavigation = function() {
 
 GradebookGradeSummary.prototype.setupFixedFooter = function() {
   // do this by setting the height of the tab content to leave room for the navigation
-  if (this.$modal.height() > $(window).height()) {
-    var $tabPane = this.$content.find(".tab-content");
-    var $contentPane =  this.$content.find(".gb-grade-summary-content");
+  var $tabPane = this.$content.find(".gb-summary-grade-panel");
 
-    var paddingSize = 160; // modal padding and modal content padding/margins (yep... fudged)
+  // reset height
+  $tabPane.removeAttr("style");
+
+  if (this.$modal.height() > $(window).height()) {
+    var $contentPane =  this.$modal.find(".gb-grade-summary-content");
+
+    var paddingSize = 100; // modal padding and modal content padding/margins (yep... fudged)
 
     var height = $tabPane.height() - (this.$modal.height() - $(window).height()) - ($contentPane.height() - this.$modal.height()) - paddingSize;
 
@@ -231,7 +234,6 @@ GradebookGradeSummary.prototype.setupModalPrint = function() {
 
 GradebookGradeSummary.prototype.setupStudentView = function() {
   var self = this;
-  self.hideWeightColumn();
   self.setupTableSorting();
 
   var $button = $("body").find(".portletBody .gb-summary-print");
@@ -270,15 +272,28 @@ GradebookGradeSummary.prototype._print = function(headerHTML, contentHTML, $cont
 GradebookGradeSummary.prototype.setupTableSorting = function() {
   var $table = this.$content.find(".gb-summary-grade-panel table");
 
+  var stickyHeaderContainer = null;
+  if ($(".tab-pane.active .gb-summary-grade-panel").length == 1) {
+    stickyHeaderContainer = $(".tab-pane.active .gb-summary-grade-panel");
+  }
+
   $table.tablesorter({
     theme : "bootstrap",
     widthFixed: true,
     headerTemplate : '{content} {icon}',
-    widgets : [ "uitheme", "zebra" ],
+    widgets : [ "uitheme", "zebra", "stickyHeaders" ],
     widgetOptions : {
       zebra : ["even", "odd"],
-      filter_reset : ".reset",
-      filter_hideFilters : true
+      //filter_reset : ".reset",
+      filter_hideFilters : true,
+      stickyHeaders_offset : 0,
+      stickyHeaders_cloneId : '-sticky',
+      stickyHeaders_addResizeEvent : true,
+      stickyHeaders_zIndex : 2,
+      stickyHeaders_attachTo : stickyHeaderContainer,
+      stickyHeaders_xScroll : null,
+      stickyHeaders_yScroll : null,
+      stickyHeaders_filteredToTop: true
     },
     //sort by due date descending and secondarily by assignment title
     sortList: [[3, 0], [0, 0]],
@@ -307,14 +322,6 @@ GradebookGradeSummary.prototype.setupTableSorting = function() {
     },
     cssInfoBlock: "gb-summary-category-tbody"
   });
-};
-
-
-GradebookGradeSummary.prototype.hideWeightColumn = function() {
-  // only hide the weight column if there are no categories being displayed
-  if (this.$content.find(".gb-summary-category-row").length == 0) {
-    this.$content.find(".weight-col").hide();
-  }
 };
 
 

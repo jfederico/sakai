@@ -54,7 +54,7 @@ For testing out the latest builds go to the [nightly server page](http://nightly
 ## Get in touch
 If you have any questions, please join the Sakai developer mailing list: To subscribe send an email to sakai-dev+subscribe@apereo.org
 
-To see a full list of Sakai email lists and the status of the migration to Apereo Google Groups check out this Sakai wiki page:
+To see a full list of Sakai email lists and other communication channels, please check out this Sakai wiki page:
 https://confluence.sakaiproject.org/display/PMC/Sakai+email+lists
 
 If you want more immediate response during M-F typical business hours you could try our Slack channels.
@@ -65,14 +65,15 @@ If you can't find your  "at institution.edu" on the Apereo signup page then send
 
 ## Community supported versions
 
-[Sakai 11.1](https://confluence.sakaiproject.org/display/DOC/Sakai+11+Release+Notes) is the recommended version for production use.
+[Sakai 11.2](https://confluence.sakaiproject.org/display/DOC/Sakai+11+Release+Notes) is the recommended version for production use.
 
 [Sakai 10](https://confluence.sakaiproject.org/display/DOC/Sakai+10+Release+Notes) is still supported. Please use the latest maintenance release of 10.7.
 
 Sakai 2.9 and earlier are no longer supported by the community.
 
 ## Under Development
-Sakai 11.2 is under development.
+Sakai 11.3 is under development.
+Sakai 12 is expected to branch in the first quarter of 2017.
 
 ## Accessibility
 [The Sakai Accessibility Working Group] (https://confluence.sakaiproject.org/display/2ACC/Accessibility+Working+Group) is responsible for ensuring that the Sakai framework and its tools are accessible to persons with disabilities. [The Sakai Ra11y plan] (https://confluence.sakaiproject.org/display/2ACC/rA11y+Plan) is working towards a VPAT and/or a WCAG2 certification.
